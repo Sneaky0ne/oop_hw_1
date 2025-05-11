@@ -74,6 +74,38 @@ class Enemy(Character):
         target.health -= self.damage
         print(f"{self.name} attacked {target.name} for {self.damage} damage")
 
+# Третий пункт
+class Boss(Enemy):
+    def __init__(self, x, y, name, health, damage):
+        super().__init__(x, y, name, health, damage)
+
+    def update(self):
+        super().update()
+        self.heal_self()
+        print(f"Enemy ready to attack with damage: {self.damage}")
+
+    # Третий пункт
+    def special_attack(self, target):
+        target.health -= self.damage * 3
+        print(f"{self.name} used special attack and dealt {self.damage * 3} damage to {target.name}")
+
+    def heal_self(self):
+        healed_points = random.randint(0, 2)
+        if healed_points > 0:
+            self.health += healed_points
+            print(f"Enemy healed itself for: {healed_points} points")
+
+    def call_for_arms(self, current_enemies: list[Enemy], amount):
+        if random.randint(0, 100) >= 95:
+            for amount in range(1, amount):
+                new_enemy = Enemy(x=random.randint(-1,1) + self.x,
+                                     y=random.randint(-1,1) + self.y,
+                                     name=f"Призванная Мусорка без ножек {len(current_enemies)}",
+                                     health=25,
+                                     damage=0)
+                current_enemies.append(new_enemy)
+                print(f"!WARNING! New enemy {new_enemy.name} was summoned!")
+
 class Item(GameObject):
     def __init__(self, x, y, name, value):
         super().__init__(x, y, name)
@@ -99,7 +131,13 @@ def game_loop(player, enemies, items, turns=5):
         # Враги атакуют игрока
         for enemy in enemies:
             if enemy.is_alive():
-                enemy.attack(player)
+                if isinstance(enemy, Boss):
+                    if random.randint(0, 100) >= 50:
+                        enemy.special_attack(player)
+                    enemy.call_for_arms(enemies, 2)
+                else:
+                    enemy.attack(player)
+
         
         # Проверка сбора предметов
         for item in items[:]:  # Копия списка для безопасного удаления
@@ -120,3 +158,21 @@ def game_loop(player, enemies, items, turns=5):
     print("\n=== GAME END ===")
     print(f"Final score: {player.score}")
     print(f"Player health: {player.health}")
+
+# Первый пункт
+player = Player(x=1, y=2, name="Игрок", score=0, health=250)
+
+items = [
+    Item(x=2, y=2, name="Меч корявый", value=20),
+    # Item(x=5, y=1, name="Меч не корявый", value=40),
+    Item(x=1, y=5, name="Меч вообще класс", value=45),
+]
+
+enemies = [
+    Enemy(x=4, y=4, name="Мусорка", health=25, damage=0),
+    # Третий пункт
+    Boss(x=4, y=4, name="Мусорка на ножках", health=80, damage=8)
+]
+
+# Второй пункт
+game_loop(player, enemies, items, 15)
